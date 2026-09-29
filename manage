@@ -1,0 +1,68 @@
+#!/usr/bin/env lua
+
+local select_bin = function()
+	local bins = { "docker", "podman" }
+	for _, bin in ipairs(bins) do
+		if os.execute("which " .. bin) ~= nil then
+			return bin
+		end
+	end
+
+	print("No container engine found, bins are: " .. table.concat(bins, ", "))
+	os.exit(1)
+end
+
+local exec_and_exit = function(cmd)
+	print("Command: " .. cmd)
+
+	local bin = select_bin()
+	print("Binary: " .. bin)
+
+	local container = "nixery.dev/shell/curl/findutils/fzf/gcc/git/gnutar/gzip/neovim/tree-sitter"
+	local pwd = io.popen("pwd"):read("*l")
+
+	local args = {
+		bin,
+		"run",
+		"--rm",
+		"-v",
+		pwd .. ":/yaml.nvim",
+		"--workdir",
+		"/yaml.nvim",
+		"-it",
+		container,
+		cmd,
+	}
+	local arg = table.concat(args, " ")
+	print("$ " .. arg)
+
+	local status, _ = os.execute(arg)
+	os.exit(status)
+end
+
+local main = function()
+	local opts = {}
+	local cmds = {
+		nvim = function()
+			return "nvim -u tests/init.lua tests/sample.yaml"
+		end,
+		test = function()
+			for line in io.lines(".tangled/workflows/tests.yaml") do
+				if string.find(line, "PlenaryBustedDirectory") then
+					return string.gsub(line, "^%s*(.-)%s*$", "%1")
+				end
+			end
+		end,
+	}
+	for name, cmd in pairs(cmds) do
+		table.insert(opts, name)
+		if name == arg[1] then
+			local arg = cmd()
+			exec_and_exit(arg)
+		end
+	end
+
+	print("No command found, options are: " .. table.concat(opts, ", "))
+end
+
+main()

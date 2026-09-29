@@ -1,0 +1,24 @@
+when:
+  - event: ["push", "manual"]
+    branch: ["main"]
+  - event: ["pull_request"]
+    branch: ["main"]
+
+engine: "nixery"
+
+dependencies:
+  nixpkgs:
+    - curl
+    - findutils
+    - fzf
+    - gcc
+    - git
+    - gnutar
+    - gzip
+    - neovim
+    - tree-sitter
+
+steps:
+  - name: Stylua
+    command: |
+      nvim --headless -u tests/init.lua -c "PlenaryBustedDirectory tests/yaml_nvim { minimal_init = 'tests/init.lua' }"

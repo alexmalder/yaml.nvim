@@ -1,0 +1,15 @@
+when:
+  - event: ["push", "manual"]
+    branch: ["main"]
+  - event: ["pull_request"]
+    branch: ["main"]
+
+engine: "nixery"
+
+dependencies:
+  nixpkgs:
+    - stylua
+
+steps:
+  - name: Stylua
+    command: stylua --check .
